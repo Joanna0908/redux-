@@ -118,7 +118,7 @@ export default function createStore(reducer, preloadedState, enhancer) {
     ensureCanMutateNextListeners()
     nextListeners.push(listener)
 
-    return function unsubscribe() {   //==为什么是return一个unscribe函数==
+    return function unsubscribe() {   //**为什么是return一个unsubscribe函数**
       if (!isSubscribed) {
         return
       }
@@ -272,7 +272,3 @@ export default function createStore(reducer, preloadedState, enhancer) {
   }
 }
 
-作者：ronniegong
-链接：https://www.jianshu.com/p/7ae531a8b299
-來源：简书
-著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
