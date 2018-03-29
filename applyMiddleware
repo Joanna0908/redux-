@@ -1,0 +1,60 @@
+import compose from './compose'
+
+/**
+ * 创建一个增强的store,可以应用middleware来dispatch store的方法
+ *
+ * 每一个middleware会议命名参数形式传入`dispatch` 和 `getState`方法
+ *
+ * @param {...Function} middlewares 被调用的中间件链.
+ * @returns {Function} 应用中间件的增强store.
+ */
+export default function applyMiddleware(...middlewares) {
+    return (createStore) => (reducer, preloadedState, enhancer) => {
+        //创建store
+        
+        //这里做了三件事情，1.用reducer创建了一个 store
+        //2. var _dispatch = store.dispatch; 将原来的dispatch方法保存了起来，因为后我们要覆盖 dispach 但又要用到原始的dispatch的功能，所以保存
+        //3. var chain = [];我们的中间件也是一个 柯里化 的函数，这个数组用来保存中间件接受第一个参数后返回的函数
+        const store = createStore(reducer, preloadedState, enhancer)
+        let dispatch = store.dispatch
+        let chain = []
+        
+        const middlewareAPI = {
+            getState: store.getState,
+            dispatch: (action) => dispatch(action)
+        }
+        //初始化所有中间件,传入middlewareAPI,`dispatch` 和 `getState`方法
+        //这里的dispatch方法是一个封装的方法,
+        //注意,此dispatch 不等于 store.dispatch(???),compose之后,dispatch已变更
+        chain = middlewares.map(middleware => middleware(middlewareAPI))
+        
+        //使用compose将中间件组合成调用链,传入原始store.dispatch作为钩子,执行最终的store.dispatch
+        dispatch = compose(...chain)(store.dispatch)
+        
+        //注意,返回的store,dispatch不再是原始store.dispatch
+        return {
+            ...store,
+            dispatch
+        }
+    }
+}
+
+/**
+ * 将方法从右到左组合起来
+ * compose(f, g, h)被转换为(...args) => f(g(h(...args)))
+ *
+ * @param {...Function} funcs 需要被组合的方法.
+ * @returns {Function} 将方法从右到左组合起来.
+ */
+
+export default function compose(...funcs) {
+    if (funcs.length === 0) {
+        return arg => arg
+    }
+    
+    if (funcs.length === 1) {
+        return funcs[0]
+    }
+    
+    return funcs.reduce((a, b) => (...args) => a(b(...args)))  //(看不懂!!!)
+}
