@@ -31,8 +31,7 @@ function bindActionCreator(actionCreator, dispatch) {
 /**
  * 将值为action creator的对象,转换为相同的key,但是方法被包裹到dispatch调用中,使得方法可以被直接调用的对象。
  *
- * @param {Function|Object} actionCreators 
- #值为action creator的对象
+ * @param {Function|Object} actionCreators 值为action creator的对象
  *
  * @param {Function} Redux store的dispatch方法
  *
