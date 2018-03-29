@@ -1,0 +1,63 @@
+bindActionCreators是一个语法糖，非必须。他的作用在于，将redux相关api--dispatch，封装在调用内部。这样，在实际应用中，从顶层容器，向子组件以props传递这些action creator时，子组件可以以普通函数的形式直接调用这些action creator，对redux无感知。
+
+先说使用：
+
+假设有如下action creator
+var addTodo = function(text){
+    return {
+        type: 'add_todo',
+        text: text
+    };
+};
+
+使用bindActionCreators前，这样调用 ：
+store.dispatch({type: 'add_todo', text: '读书'});
+
+使用bindActionCreators包裹addTodo
+var actions = redux.bindActionCreators({
+    addTodo: addTodo
+}, store.dispatch);
+
+现在可以这样调用：
+actions.addTodo('看电影');
+
+
+源码分析：
+//使用dispatch包裹actionCreator
+function bindActionCreator(actionCreator, dispatch) {
+    return (...args) => dispatch(actionCreator(...args))
+}
+
+/**
+ * 将值为action creator的对象,转换为相同的key,但是方法被包裹到dispatch调用中,使得方法可以被直接调用的对象。
+ *
+ * @param {Function|Object} actionCreators 
+ #值为action creator的对象
+ *
+ * @param {Function} Redux store的dispatch方法
+ *
+ * @returns {Function|Object} 相同的key,方法被包裹到dispatch调用中的对象
+ */
+export default function bindActionCreators(actionCreators, dispatch) {
+    if (typeof actionCreators === 'function') {
+        return bindActionCreator(actionCreators, dispatch)
+    }
+    
+    if (typeof actionCreators !== 'object' || actionCreators === null) {
+        throw new Error(
+            `bindActionCreators expected an object or a function, instead received ${actionCreators === null ? 'null' : typeof actionCreators}. ` +
+            `Did you write "import ActionCreators from" instead of "import * as ActionCreators from"?`
+        )
+    }
+    
+    const keys = Object.keys(actionCreators)
+    const boundActionCreators = {}
+    for (let i = 0; i < keys.length; i++) {
+        const key = keys[i]
+        const actionCreator = actionCreators[key]
+        if (typeof actionCreator === 'function') {
+            boundActionCreators[key] = bindActionCreator(actionCreator, dispatch)
+        }
+    }
+    return boundActionCreators
+}
